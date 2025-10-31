@@ -48,8 +48,20 @@ function Get-UsuariosLogin {
 
 # Opción 2: Desplegar discos
 function Get-DiscosEspacio {
-    Write-Output "Opción 2: (En desarrollo) Desplegar discos (filesystems)..."
-    # Aquí irá el cmdlet 'Get-WmiObject Win32_LogicalDisk' o 'Get-PSDrive'
+    Write-Output "OpCión 2: Desplegando discos (filesystems)..."
+    Write-Output ""
+
+    # Usamos Get-CimInstance (clase5.md) para consultar WMI/CIM
+    # La clase Win32_LogicalDisk (clase7.md) es específica para esto
+    # El filtro "DriveType=3" significa "Discos Fijos Locales" (clase7.md)
+    Get-CimInstance -ClassName Win32_LogicalDisk -Filter "DriveType=3" | `
+    
+        # Usamos Format-Table (clase4.md)
+        Format-Table -Property DeviceID,
+                                # Creamos una columna calculada (clase4.md)
+                                @{n='Tamaño Total (Bytes)'; e={$_.Size}},
+                                # Creamos otra columna calculada (clase4.md)
+                                @{n='Espacio Libre (Bytes)'; e={$_.FreeSpace}} -AutoSize
 }
 
 # Opción 3: Ver 10 archivos más grandes
