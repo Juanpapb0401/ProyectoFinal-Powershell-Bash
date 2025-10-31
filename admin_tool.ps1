@@ -20,7 +20,7 @@ function Get-UsuariosLogin {
         Write-Output "-----------------------------------------------"
 
         # 3. Cruzamos la información
-        foreach ($user in $localUsers) {
+        $results = foreach ($user in $localUsers) {
             
             # Buscamos el perfil del usuario local
             # El formato del nombre es "COMPUTADORA\Usuario"
@@ -37,7 +37,9 @@ function Get-UsuariosLogin {
                                     "Nunca o Desconocido"
                                 }
             }
-        } | Format-Table -AutoSize # Pipe final para formatear la tabla
+        }
+
+        $results | Format-Table -AutoSize # Pipe final para formatear la tabla
 
     } catch {
         Write-Error "Error al obtener la información de usuarios: $_"
