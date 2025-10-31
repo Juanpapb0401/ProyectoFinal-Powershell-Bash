@@ -66,8 +66,31 @@ function Get-DiscosEspacio {
 
 # Opcion 3: Ver 10 archivos mas grandes
 function Get-10MasGrandes {
-    Write-Output "Opcion 3: (En desarrollo) Ver 10 archivos mas grandes..."
-    # Aqui iran 'Get-ChildItem', 'Sort-Object' y 'Select-Object'
+    Write-Output "OpCión 3: Desplegar los 10 archivos más grandes..."
+    Write-Output ""
+
+    # 1. Pedir al usuario el disco a escanear
+    $path = Read-Host "Ingrese la ruta o disco a escanear (ej: C:\ o C:\Users)"
+    
+    # Validar que la ruta exista
+    if (-not (Test-Path $path)) {
+        Write-Warning "La ruta '$path' no existe. Volviendo al menú."
+        return
+    }
+
+    Write-Output "Buscando en '$path'... Esto puede tardar varios minutos."
+
+    try {
+        # 2. La cadena de comandos (pipeline)
+        Get-ChildItem -Path $path -Recurse -File -ErrorAction SilentlyContinue | `
+            Sort-Object -Property Length -Descending | `
+            Select-Object -First 10 | `
+            Format-Table -Property @{n='Ruta Completa'; e={$_.FullName}},
+                                   @{n='Tamaño (Bytes)'; e={$_.Length}},
+                                   @{n='Tamaño (MB)'; e={[math]::Round($_.Length / 1MB, 2)}} -AutoSize
+    } catch {
+        Write-Error "Ocurrió un error al buscar archivos: $_"
+    }
 }
 
 # Opcion 4: Ver memoria libre y swap
