@@ -4,28 +4,41 @@
 # --- Definición de Funciones (vacías por ahora) ---
 
 # Opción 1: Desplegar usuarios y último login
-# Opción 1: Desplegar usuarios y último login 
 function Get-UsuariosLogin {
     Write-Output "OpCión 1: Desplegando usuarios y último login..."
     Write-Output ""
-    
+
     try {
-        # Usamos Get-CimInstance  para consultar el sistema
-        # La clase 'Win32_UserAccount' contiene la información de los usuarios
-        # 'Filter' nos permite obtener solo las cuentas locales
-        Get-CimInstance -ClassName Win32_UserAccount -Filter "LocalAccount = $True" | `
+        # 1. Obtenemos los perfiles de login, que SÍ tienen la fecha
+        # Esta clase es más fiable para la fecha que Win32_UserAccount
+        $loginProfiles = Get-CimInstance -ClassName Win32_NetworkLoginProfile
+
+        # 2. Obtenemos los usuarios locales para filtrar
+        $localUsers = Get-CimInstance -ClassName Win32_UserAccount -Filter "LocalAccount = $True"
         
-        # Usamos Format-Table (ft) para formatear la salida 
-        # Usamos -Property para seleccionar y crear columnas personalizadas 
-        Format-Table -Property @{n='Usuario'; e={$_.Name}},
-                               @{n='Último Ingreso'; e={
-                                   if ($_.LastLogin) {
-                                       # La fecha viene en un formato WMI, la convertimos
-                                       $_.LastLogin
-                                   } else {
-                                       "Nunca ha ingresado"
-                                   }
-                                [cite_start]}} -AutoSize # Autosize ajusta el ancho de las columnas 
+        Write-Output "Usuarios locales y su último ingreso conocido:"
+        Write-Output "-----------------------------------------------"
+
+        # 3. Cruzamos la información
+        foreach ($user in $localUsers) {
+            
+            # Buscamos el perfil del usuario local
+            # El formato del nombre es "COMPUTADORA\Usuario"
+            $profile = $loginProfiles | Where-Object { $_.Name -eq "$env:COMPUTERNAME\$($user.Name)" }
+            
+            # Creamos un objeto con los datos
+            # Esto nos permite usar Format-Table al final
+            [PSCustomObject]@{
+                Usuario = $user.Name
+                'Último Ingreso' = if ($profile -and $profile.LastLogon) {
+                                    # Get-CimInstance ya convierte la fecha por nosotros
+                                    $profile.LastLogon 
+                                } else {
+                                    "Nunca o Desconocido"
+                                }
+            }
+        } | Format-Table -AutoSize # Pipe final para formatear la tabla
+
     } catch {
         Write-Error "Error al obtener la información de usuarios: $_"
     }

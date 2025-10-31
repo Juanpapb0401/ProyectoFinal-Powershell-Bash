@@ -5,11 +5,9 @@
 # --- Definición de Funciones (vacías por ahora) ---
 # [cite: 391, 401, 403]
 
-# Opción 1: Desplegar usuarios y último login
-# Opción 1: Desplegar usuarios y último login 
-# Opción 1: Desplegar usuarios y último login (Versión Eficiente)
+# Opcion 1: Desplegar usuarios y ultimo login
 funcion_usuarios() {
-    echo "OpCión 1: Desplegando usuarios y último login..."
+    echo "Opcion 1: Desplegando usuarios y ultimo login..."
     echo ""
     
     # Ejecutamos 'lastlog' UNA SOLA VEZ y 'awk' UNA SOLA VEZ
@@ -22,16 +20,16 @@ funcion_usuarios() {
         printf "===================================================================\n"
     }
     
-    # 2. PATRÓN DE BÚSQUEDA: Saltar el encabezado original
-    # (NR es el Número de Registro, 'next' salta al siguiente)
+    # 2. PATRON DE BUSQUEDA: Saltar el encabezado original
+    # (NR es el Numero de Registro, 'next' salta al siguiente)
     NR == 1 { next }
 
-    # 3. PATRÓN DE BÚSQUEDA: Saltar usuarios de sistema
-    # Usamos una expresión regular para saltar líneas que EMPIECEN (^)
+    # 3. PATRON DE BUSQUEDA: Saltar usuarios de sistema
+    # Usamos una expresion regular para saltar lineas que EMPIECEN (^)
     # con nombres de servicio comunes.
     /^(daemon|bin|sys|sync|games|man|lp|mail|news|uucp|proxy|www-data|backup|sshd)/ { next }
 
-    # 4. ACCIÓN: Se ejecuta para todas las líneas que SÍ pasaron
+    # 4. ACCION: Se ejecuta para todas las lineas que SI pasaron
     {
         if ($0 ~ /\*\*Never logged in\*\*/) {
             printf "%-20s | %s\n", $1, "Nunca ha ingresado"
@@ -46,10 +44,10 @@ funcion_usuarios() {
     }'
 }
 
-# Opción 2: Desplegar discos
-# Opción 2: Desplegar discos (filesystems)
+# Opcion 2: Desplegar discos
+# Opcion 2: Desplegar discos (filesystems)
 funcion_discos() {
-    echo "OpCión 2: Desplegando discos (filesystems)..."
+    echo "Opcion 2: Desplegando discos (filesystems)..."
     echo ""
     
     # Usamos df -B1 para que la salida sea en bloques de 1 byte
@@ -58,34 +56,34 @@ funcion_discos() {
     
     # 1. (BEGIN) Imprimir el encabezado
     BEGIN {
-        printf "%-25s | %-18s | %-18s\n", "Disco (Filesystem)", "Tamaño Total (Bytes)", "Espacio Libre (Bytes)"
+        printf "%-25s | %-18s | %-18s\n", "Disco (Filesystem)", "Tamano Total (Bytes)", "Espacio Libre (Bytes)"
         printf "============================================================================\n"
     }
     
-    # 2. (PATRÓN) Saltar la primera línea (que es el encabezado de df)
-    # NR (Número de Registro) > 1
+    # 2. (PATRON) Saltar la primera linea (que es el encabezado de df)
+    # NR (Numero de Registro) > 1
     NR > 1 {
-        # 3. (ACCIÓN) Imprimir los campos formateados
+        # 3. (ACCION) Imprimir los campos formateados
         # $1 = Filesystem, $2 = Tamaño Total, $4 = Espacio Libre
         printf "%-25s | %-18s | %-18s\n", $1, $2, $4
     }'
 }
 
-# Opción 3: Ver 10 archivos más grandes
+# Opcion 3: Ver 10 archivos mas grandes
 funcion_10_mas_grandes() {
-    echo "Opción 3: (En desarrollo) Ver 10 archivos más grandes..."
+    echo "Opcion 3: (En desarrollo) Ver 10 archivos mas grandes..."
     # Aquí irán los comandos 'find', 'du', 'sort', 'head'
 }
 
-# Opción 4: Ver memoria libre y swap
+# Opcion 4: Ver memoria libre y swap
 funcion_memoria() {
-    echo "Opción 4: (En desarrollo) Ver memoria libre y swap..."
+    echo "Opcion 4: (En desarrollo) Ver memoria libre y swap..."
     # Aquí irá el comando 'free' y 'awk'
 }
 
-# Opción 5: Hacer copia de seguridad
+# Opcion 5: Hacer copia de seguridad
 funcion_backup() {
-    echo "Opción 5: (En desarrollo) Hacer copia de seguridad a USB..."
+    echo "Opcion 5: (En desarrollo) Hacer copia de seguridad a USB..."
     # Aquí irán los comandos 'tar' o 'rsync', 'find'
 }
 
@@ -94,11 +92,11 @@ mostrar_menu() {
     # Usamos 'echo' para imprimir en la salida estándar (stdout) [cite: 278]
     echo ""
     echo "================================================="
-    echo "   Herramienta de Administración de Data Center (BASH)"
+    echo "   Herramienta de Administracion de Data Center (BASH)"
     echo "================================================="
-    echo "1. Desplegar usuarios y último login "
+    echo "1. Desplegar usuarios y ultimo login "
     echo "2. Desplegar discos (filesystems) [cite: 506]"
-    echo "3. Ver 10 archivos más grandes [cite: 508]"
+    echo "3. Ver 10 archivos mas grandes [cite: 508]"
     echo "4. Ver memoria libre y swap [cite: 510]"
     echo "5. Hacer copia de seguridad (Backup) a USB [cite: 511]"
     echo "S. Salir"
@@ -128,7 +126,7 @@ do
             echo "Saliendo del script. ¡Hasta pronto!"
             exit 0 ;; # [cite: 348]
         *) # [cite: 349]
-            echo "Opción inválida. Por favor, intente de nuevo." ;; # [cite: 350]
+            echo "Opcion invalida. Por favor, intente de nuevo." ;; # [cite: 350]
     esac # [cite: 351]
 
     echo ""
