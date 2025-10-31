@@ -6,15 +6,69 @@
 # [cite: 391, 401, 403]
 
 # Opción 1: Desplegar usuarios y último login
+# Opción 1: Desplegar usuarios y último login 
+# Opción 1: Desplegar usuarios y último login (Versión Eficiente)
 funcion_usuarios() {
-    echo "Opción 1: (En desarrollo) Desplegar usuarios y último login..."
-    # Aquí irán los comandos 'who', 'last' y 'awk'
+    echo "OpCión 1: Desplegando usuarios y último login..."
+    echo ""
+    
+    # Ejecutamos 'lastlog' UNA SOLA VEZ y 'awk' UNA SOLA VEZ
+    # (Asegúrate de tener la ruta correcta si 'sudo' no es una opción)
+    lastlog | awk '
+    
+    # 1. Se ejecuta antes que nada
+    BEGIN { 
+        printf "%-20s | %s\n", "Usuario", "Último Ingreso"
+        printf "===================================================================\n"
+    }
+    
+    # 2. PATRÓN DE BÚSQUEDA: Saltar el encabezado original
+    # (NR es el Número de Registro, 'next' salta al siguiente)
+    NR == 1 { next }
+
+    # 3. PATRÓN DE BÚSQUEDA: Saltar usuarios de sistema
+    # Usamos una expresión regular para saltar líneas que EMPIECEN (^)
+    # con nombres de servicio comunes.
+    /^(daemon|bin|sys|sync|games|man|lp|mail|news|uucp|proxy|www-data|backup|sshd)/ { next }
+
+    # 4. ACCIÓN: Se ejecuta para todas las líneas que SÍ pasaron
+    {
+        if ($0 ~ /\*\*Never logged in\*\*/) {
+            printf "%-20s | %s\n", $1, "Nunca ha ingresado"
+        } else {
+            # Reconstruye la fecha desde el campo 4 hasta el final (NF)
+            lastlogin = ""
+            for (i=4; i<=NF; i++) { 
+                lastlogin = lastlogin " " $i
+            }
+            printf "%-20s |%s\n", $1, lastlogin
+        }
+    }'
 }
 
 # Opción 2: Desplegar discos
+# Opción 2: Desplegar discos (filesystems)
 funcion_discos() {
-    echo "Opción 2: (En desarrollo) Desplegar filesystems o discos..."
-    # Aquí irán los comandos 'df'
+    echo "OpCión 2: Desplegando discos (filesystems)..."
+    echo ""
+    
+    # Usamos df -B1 para que la salida sea en bloques de 1 byte
+    # | (pipe) para enviar la salida a awk
+    df -B1 | awk '
+    
+    # 1. (BEGIN) Imprimir el encabezado
+    BEGIN {
+        printf "%-25s | %-18s | %-18s\n", "Disco (Filesystem)", "Tamaño Total (Bytes)", "Espacio Libre (Bytes)"
+        printf "============================================================================\n"
+    }
+    
+    # 2. (PATRÓN) Saltar la primera línea (que es el encabezado de df)
+    # NR (Número de Registro) > 1
+    NR > 1 {
+        # 3. (ACCIÓN) Imprimir los campos formateados
+        # $1 = Filesystem, $2 = Tamaño Total, $4 = Espacio Libre
+        printf "%-25s | %-18s | %-18s\n", $1, $2, $4
+    }'
 }
 
 # Opción 3: Ver 10 archivos más grandes

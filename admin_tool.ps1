@@ -4,9 +4,31 @@
 # --- Definición de Funciones (vacías por ahora) ---
 
 # Opción 1: Desplegar usuarios y último login
+# Opción 1: Desplegar usuarios y último login 
 function Get-UsuariosLogin {
-    Write-Output "Opción 1: (En desarrollo) Desplegar usuarios y último login..."
-    # Aquí irán los cmdlets 'Get-LocalUser' o WMI
+    Write-Output "OpCión 1: Desplegando usuarios y último login..."
+    Write-Output ""
+    
+    try {
+        # Usamos Get-CimInstance  para consultar el sistema
+        # La clase 'Win32_UserAccount' contiene la información de los usuarios
+        # 'Filter' nos permite obtener solo las cuentas locales
+        Get-CimInstance -ClassName Win32_UserAccount -Filter "LocalAccount = $True" | `
+        
+        # Usamos Format-Table (ft) para formatear la salida 
+        # Usamos -Property para seleccionar y crear columnas personalizadas 
+        Format-Table -Property @{n='Usuario'; e={$_.Name}},
+                               @{n='Último Ingreso'; e={
+                                   if ($_.LastLogin) {
+                                       # La fecha viene en un formato WMI, la convertimos
+                                       $_.LastLogin
+                                   } else {
+                                       "Nunca ha ingresado"
+                                   }
+                                [cite_start]}} -AutoSize # Autosize ajusta el ancho de las columnas 
+    } catch {
+        Write-Error "Error al obtener la información de usuarios: $_"
+    }
 }
 
 # Opción 2: Desplegar discos
