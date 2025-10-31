@@ -93,7 +93,7 @@ function Get-10MasGrandes {
     }
 }
 
-# Opción 4: Ver memoria libre y swap
+# Opción 4: Ver memoria libre y swap (CORREGIDO)
 function Get-MemoriaSwap {
     Write-Output "OpCión 4: Desplegando Memoria Libre y Swap en Uso..."
     Write-Output ""
@@ -102,43 +102,33 @@ function Get-MemoriaSwap {
         # --- 1. MEMORIA RAM ---
         Write-Output "--- MEMORIA RAM ---"
         
-        # Consultamos la clase WMI del Sistema Operativo
         Get-CimInstance -ClassName Win32_OperatingSystem | `
             
-            # Usamos Format-List para mostrar los datos
-            Format-List -Property `
-                # Propiedad calculada para Memoria Libre
-                @{n='Memoria Libre (Bytes)'; e={$_.FreePhysicalMemory * 1024}},
-                # Propiedad calculada para Porcentaje Libre
-                @{n='Porcentaje Libre (%)'; e={
-                    # Hacemos el cálculo de porcentaje
-                    $freePercent = ($_.FreePhysicalMemory / $_.TotalVisibleMemorySize) * 100
-                    # Redondeamos a 2 decimales
-                    [math]::Round($freePercent, 2)
-                }}
+            # Arreglo: Las propiedades empiezan en la misma línea que -Property
+            Format-List -Property @{n='Memoria Libre (Bytes)'; e={$_.FreePhysicalMemory * 1024}},
+                                  @{n='Porcentaje Libre (%)'; e={
+                                      $freePercent = ($_.FreePhysicalMemory / $_.TotalVisibleMemorySize) * 100
+                                      [math]::Round($freePercent, 2)
+                                  }}
         
         # --- 2. SWAP (Page File) ---
         Write-Output "--- SWAP (Page File) ---"
         
-        # Consultamos la clase WMI que mide el uso del archivo de paginación
         Get-CimInstance -ClassName Win32_PageFileUsage | `
         
-            Format-List -Property `
-                # Propiedad calculada para Swap en Uso
-                # Esta propiedad ya viene en Megabytes, la convertimos a bytes
-                @{n='Swap en Uso (Bytes)'; e={$_.CurrentUsage * 1MB}},
-                # Propiedad calculada para Porcentaje en Uso
-                @{n='Porcentaje en Uso (%)'; e={
-                    # Validamos que el swap no sea 0 para evitar dividir por cero
-                    if ($_.AllocatedBaseSize -gt 0) {
-                        $usedPercent = ($_.CurrentUsage / $_.AllocatedBaseSize) * 100
-                        [math]::Round($usedPercent, 2)
-                    } else {
-                        0 # Si no hay swap, el uso es 0%
-                    }
-                }}
+            # Arreglo: Las propiedades empiezan en la misma línea que -Property
+            Format-List -Property @{n='Swap en Uso (Bytes)'; e={$_.CurrentUsage * 1MB}},
+                                  @{n='Porcentaje en Uso (%)'; e={
+                                      if ($_.AllocatedBaseSize -gt 0) {
+                                          $usedPercent = ($_.CurrentUsage / $_.AllocatedBaseSize) * 100
+                                          [math]::Round($usedPercent, 2)
+                                      } else {
+                                          0
+                                      }
+                                  }}
 
     } catch {
+        # El error "$_" ahora debería mostrar un error diferente si algo más falla
         Write-Error "Ocurrió un error al obtener la información de memoria: $_"
     }
 }
