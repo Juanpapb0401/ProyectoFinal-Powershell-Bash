@@ -133,10 +133,78 @@ function Get-MemoriaSwap {
     }
 }
 
-# Opcion 5: Hacer copia de seguridad
+# Opción 5: Hacer copia de seguridad (Backup) a USB
 function Start-BackupUSB {
-    Write-Output "Opcion 5: (En desarrollo) Hacer copia de seguridad a USB..."
-    # Aqui iran 'Copy-Item', 'Get-ChildItem' y 'Export-Csv'
+    Write-Output "OpCión 5: Hacer copia de seguridad (Backup) a USB..."
+    Write-Output ""
+
+    try {
+        # 1. Pedir el directorio fuente
+        $sourceDir = Read-Host "Ingrese la ruta del directorio a respaldar (ej: C:\Datos)"
+        if (-not (Test-Path $sourceDir -PathType Container)) {
+            Write-Warning "La ruta '$sourceDir' no existe o no es un directorio. Volviendo al menú."
+            return
+        }
+
+        # 2. Buscar y mostrar unidades USB
+        Write-Output "Buscando unidades USB..."
+        # Usamos WMI/CIM (clase5.md) para encontrar discos removibles (DriveType=2)
+        $usbDrives = Get-CimInstance -ClassName Win32_LogicalDisk -Filter "DriveType=2"
+        
+        if (-not $usbDrives) {
+            Write-Warning "No se encontró ninguna unidad USB (disco removible). Volviendo al menú."
+            return
+        }
+
+        Write-Output "Unidades USB detectadas:"
+        $usbDrives | Format-Table DeviceID, VolumeName, @{n='Espacio Libre (MB)'; e={[math]::Round($_.FreeSpace / 1MB, 2)}} -AutoSize
+        
+        # 3. Pedir el destino
+        $destLetter = Read-Host "Ingrese la letra de la unidad USB para el backup (ej: E)"
+        $destDrive = $usbDrives | Where-Object { $_.DeviceID -eq "$($destLetter.ToUpper()):" }
+
+        if (-not $destDrive) {
+            Write-Warning "La unidad '$destLetter' no es un USB válido. Volviendo al menú."
+            return
+        }
+
+        # 4. Crear carpeta de backup
+        $timestamp = Get-Date -Format "yyyyMMdd_HHmmss"
+        $backupPath = Join-Path -Path $destDrive.DeviceID -ChildPath "Backup_$timestamp"
+        New-Item -ItemType Directory -Path $backupPath | Out-Null
+
+        Write-Output "Iniciando copia en '$backupPath'..."
+        
+        # 5. Copiar archivos
+        # -Recurse: copia todo. -Force: sobrescribe si es necesario.
+        Copy-Item -Path $sourceDir -Destination $backupPath -Recurse -Force
+        
+        Write-Output "Copia de archivos finalizada."
+
+        # 6. Crear catálogo (Requisito del proyecto)
+        Write-Output "Creando catálogo de archivos..."
+        $catalogPath = Join-Path -Path $backupPath -ChildPath "catalogo_backup.csv"
+
+        # Obtenemos todos los archivos del ORIGEN
+        Get-ChildItem -Path $sourceDir -Recurse -File | `
+            
+            # Usamos Select-Object para crear las columnas del catálogo
+            Select-Object -Property @{n='NombreArchivo'; e={$_.Name}},
+                                    @{n='RutaRelativa'; e={$_.FullName.Substring($sourceDir.Length)}},
+                                    @{n='FechaUltimaModificacion'; e={$_.LastWriteTime}},
+                                    @{n='Tamaño (Bytes)'; e={$_.Length}} | `
+            
+            # Exportamos a CSV
+            Export-Csv -Path $catalogPath -NoTypeInformation -Encoding UTF8
+        
+        Write-Output ""
+        Write-Output "¡Backup completado exitosamente!" -ForegroundColor Green
+        Write-Output "Directorio: $backupPath"
+        Write-Output "Catálogo: $catalogPath"
+
+    } catch {
+        Write-Error "Ocurrió un error durante el backup: $_"
+    }
 }
 
 # --- Funcion para Mostrar el Menu ---
