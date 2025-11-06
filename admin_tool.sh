@@ -46,45 +46,149 @@ funcion_usuarios() {
 
 # Opcion 2: Desplegar discos
 # Opcion 2: Desplegar discos (filesystems)
-funcion_discos() {
-    echo "Opcion 2: Desplegando discos (filesystems)..."
+mostrar_discos() {
     echo ""
+    echo "==========================================================="
+    echo "      Reporte de Discos y Filesystems (en Bytes)"
+    echo "==========================================================="
     
-    # Usamos df -B1 para que la salida sea en bloques de 1 byte
-    # | (pipe) para enviar la salida a awk
-    df -B1 | awk '
+    # df: Muestra espacio en disco
+    # -B1: Muestra tamaños en bloques de 1 Byte (requisito)
+    # --output=...: Selecciona columnas específicas
+    # -x: Excluye tipos de filesystem irrelevantes (temporales, etc.)
+    # column -t: Formatea la salida como una tabla
+    df -B1 --output=source,size,avail -x tmpfs -x devtmpfs -x squashfs | column -t
     
-    # 1. (BEGIN) Imprimir el encabezado
-    BEGIN {
-        printf "%-25s | %-18s | %-18s\n", "Disco (Filesystem)", "Tamano Total (Bytes)", "Espacio Libre (Bytes)"
-        printf "============================================================================\n"
-    }
-    
-    # 2. (PATRON) Saltar la primera linea (que es el encabezado de df)
-    # NR (Numero de Registro) > 1
-    NR > 1 {
-        # 3. (ACCION) Imprimir los campos formateados
-        # $1 = Filesystem, $2 = Tamaño Total, $4 = Espacio Libre
-        printf "%-25s | %-18s | %-18s\n", $1, $2, $4
-    }'
+    echo "==========================================================="
+    echo ""
+    read -n 1 -s -r -p "Presiona cualquier tecla para volver al menú..."
 }
 
 # Opcion 3: Ver 10 archivos mas grandes
-funcion_10_mas_grandes() {
-    echo "Opcion 3: (En desarrollo) Ver 10 archivos mas grandes..."
-    # Aquí irán los comandos 'find', 'du', 'sort', 'head'
+buscar_archivos_grandes() {
+    local ruta
+    
+    echo ""
+    echo "==========================================================="
+    echo "           Top 10 Archivos Más Grandes (en Bytes)"
+    echo "==========================================================="
+    
+    read -p "Ingresa la ruta del disco o directorio a escanear (ej: /var o /home): " ruta
+
+    # Validamos que la ruta exista y sea un directorio
+    if [ ! -d "$ruta" ]; then
+        echo "Error: La ruta '$ruta' no existe o no es un directorio."
+        echo "==========================================================="
+        echo ""
+        read -n 1 -s -r -p "Presiona cualquier tecla para volver al menú..."
+        return 1 # Retorna un código de error
+    fi
+
+    echo "Escaneando '$ruta'... (esto puede tardar varios minutos)"
+
+    # find: Busca archivos (-type f)
+    # -exec du -b {} +: Obtiene el tamaño en bytes de forma eficiente
+    # 2>/dev/null: Oculta errores de "Permiso denegado"
+    # sort -nr: Ordena numéricamente en reverso
+    # head -n 10: Muestra los primeros 10
+    # column -t: Formatea en tabla
+    find "$ruta" -type f -exec du -b {} + 2>/dev/null | sort -nr | head -n 10 | column -t
+    
+    echo "==========================================================="
+    echo ""
+    read -n 1 -s -r -p "Presiona cualquier tecla para volver al menú..."
 }
 
 # Opcion 4: Ver memoria libre y swap
-funcion_memoria() {
-    echo "Opcion 4: (En desarrollo) Ver memoria libre y swap..."
-    # Aquí irá el comando 'free' y 'awk'
+reportar_memoria() {
+    echo ""
+    echo "==========================================================="
+    echo "            Reporte de Memoria y Swap (Bytes y %)"
+    echo "==========================================================="
+    
+    # free -b: Muestra memoria en bytes
+    # awk: Procesa la salida de 'free'
+    # NR==2: Se ejecuta en la línea 2 (Memoria)
+    # NR==3: Se ejecuta en la línea 3 (Swap)
+    # '%.2f%%': Formatea el número flotante (porcentaje) a 2 decimales
+    # 'total=$2 || total=1': Previene división por cero si el swap total es 0
+    
+    free -b | awk '
+    NR==2 { 
+        total=$2; free=$4; 
+        printf "Memoria Libre:   %d bytes (%.2f%%)\n", free, (free/total)*100 
+    }
+    NR==3 { 
+        total=$2 || total=1; used=$3; 
+        printf "Swap Usado:      %d bytes (%.2f%%)\n", used, (used/total)*100 
+    }'
+    
+    echo "==========================================================="
+    echo ""
+    read -n 1 -s -r -p "Presiona cualquier tecla para volver al menú..."
 }
 
 # Opcion 5: Hacer copia de seguridad
-funcion_backup() {
-    echo "Opcion 5: (En desarrollo) Hacer copia de seguridad a USB..."
-    # Aquí irán los comandos 'tar' o 'rsync', 'find'
+realizar_backup() {
+    local origen
+    local destino
+    local catalogo_file
+    
+    echo ""
+    echo "==========================================================="
+    echo "           Asistente de Backup de Directorio"
+    echo "==========================================================="
+    
+    read -p "Ingresa la ruta del directorio a respaldar (ej: /home/user/docs): " origen
+    read -p "Ingresa la ruta de destino (ej: /media/mi_usb/backups): " destino
+
+    # Validación de origen
+    if [ ! -d "$origen" ]; then
+        echo "Error: El directorio de origen '$origen' no existe."
+        echo "==========================================================="
+        echo ""
+        read -n 1 -s -r -p "Presiona cualquier tecla para volver al menú..."
+        return 1
+    fi
+
+    # Validación/Creación de destino
+    mkdir -p "$destino"
+    if [ ! -d "$destino" ]; then
+        echo "Error: No se pudo crear el directorio de destino '$destino'."
+        echo "Asegúrate de tener permisos o que el USB esté montado."
+        echo "==========================================================="
+        echo ""
+        read -n 1 -s -r -p "Presiona cualquier tecla para volver al menú..."
+        return 1
+    fi
+
+    echo "Iniciando backup con rsync de '$origen' a '$destino'..."
+    
+    # rsync -av: Modo 'archive' (recursivo, preserva fechas/permisos) y 'verbose'
+    rsync -av "$origen" "$destino"
+    
+    # Verificamos si rsync (backup) fue exitoso
+    if [ $? -eq 0 ]; then
+        echo "Backup completado exitosamente."
+        
+        # Generar el catálogo
+        # basename: extrae el último nombre de la ruta (ej: 'docs' de '/home/user/docs')
+        catalogo_file="$destino/catalogo_$(basename "$origen")$(date +%Y%m%d%H%M%S).txt"
+        
+        echo "Generando catálogo de archivos en '$catalogo_file'..."
+        
+        # ls -lR: Lista recursivamente (-R) con formato largo (-l)
+        # El formato largo incluye las fechas de modificación
+        ls -lR "$origen" > "$catalogo_file"
+        
+        echo "Catálogo generado."
+    else
+        echo "Error: Ocurrió un problema durante el proceso de rsync (backup)."
+    fi
+    
+    echo "==========================================================="
+    echo ""
+    read -n 1 -s -r -p "Presiona cualquier tecla para volver al menú..."
 }
 
 # --- Función para Mostrar el Menú ---
@@ -114,14 +218,14 @@ do
     case $opcion in # [cite: 325, 337]
         1) 
             funcion_usuarios ;; # [cite: 327]
-        2) 
-            funcion_discos ;;
-        3) 
-            funcion_10_mas_grandes ;;
-        4) 
-            funcion_memoria ;;
-        5) 
-            funcion_backup ;;
+        2)
+            mostrar_discos ;;
+        3)
+            buscar_archivos_grandes ;;
+        4)
+            reportar_memoria ;;
+        5)
+            realizar_backup ;;
         's' | 'S') # [cite: 338, 346]
             echo "Saliendo del script. ¡Hasta pronto!"
             exit 0 ;; # [cite: 348]
