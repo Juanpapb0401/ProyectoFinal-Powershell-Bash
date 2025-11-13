@@ -362,9 +362,9 @@ function Start-BackupUSB {
         New-Item -ItemType Directory -Path $backupPath | Out-Null
 
         # Mensaje informativo con la ruta donde se guardara el backup
-        Write-Output "Iniciando copia en '$backupPath'..."
-        
-´        # PASO 5: COPIAR ARCHIVOS RECURSIVAMENTE
+    Write-Output "Iniciando copia en '$backupPath'..."
+
+    # PASO 5: COPIAR ARCHIVOS RECURSIVAMENTE
 
         # Copy-Item: cmdlet para copiar archivos y directorios
         # -Path $sourceDir: origen (directorio a respaldar)
@@ -372,7 +372,7 @@ function Start-BackupUSB {
         # -Recurse: copia recursivamente todo el contenido incluyendo subdirectorios
         # -Force: sobrescribe archivos existentes sin preguntar
         # Este comando puede tardar dependiendo del tamaño del directorio
-        Copy-Item -Path $sourceDir -Destination $backupPath -Recurse -Force
+    Copy-Item -Path $sourceDir -Destination $backupPath -Recurse -Force -ErrorAction Stop
         
         # Mensaje confirmando que la copia termino
         Write-Output "Copia de archivos finalizada."
@@ -416,11 +416,10 @@ function Start-BackupUSB {
             Export-Csv -Path $catalogPath -NoTypeInformation -Encoding UTF8
         
         # PASO 7: MENSAJES FINALES DE EXITO
-        Write-Output ""
-        
-        # Mensaje de exito con color verde
-        # -ForegroundColor Green: cambia el color del texto a verde
-        Write-Output "Backup completado exitosamente!" -ForegroundColor Green
+    Write-Output ""
+
+    # Mensaje de exito con color verde (Write-Host soporta colores)
+    Write-Host "Backup completado exitosamente!" -ForegroundColor Green
         
         # Muestra la ruta donde se guardo el backup
         Write-Output "Directorio: $backupPath"
@@ -445,10 +444,10 @@ function Show-Menu {
     Write-Output "   Herramienta de Administracion de Data Center (PowerShell)"
     Write-Output "================================================="
     Write-Output "1. Desplegar usuarios y ultimo login "
-    Write-Output "2. Desplegar discos (filesystems) [cite: 506]"
-    Write-Output "3. Ver 10 archivos mas grandes [cite: 508]"
-    Write-Output "4. Ver memoria libre y swap [cite: 510]"
-    Write-Output "5. Hacer copia de seguridad (Backup) a USB [cite: 511]"
+    Write-Output "2. Desplegar discos (filesystems)"
+    Write-Output "3. Ver 10 archivos mas grandes"
+    Write-Output "4. Ver memoria libre y swap"
+    Write-Output "5. Hacer copia de seguridad (Backup) a USB"
     Write-Output "S. Salir"
     Write-Output "================================================="
 }
