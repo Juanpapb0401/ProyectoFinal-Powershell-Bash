@@ -1,9 +1,6 @@
 #!/bin/bash
-# [cite: 69]
 # Proyecto Final de Sistemas Operacionales - Herramienta BASH
-
 # --- Definición de Funciones (vacías por ahora) ---
-# [cite: 391, 401, 403]
 
 # =============================================================================
 # FUNCIÓN: funcion_usuarios
