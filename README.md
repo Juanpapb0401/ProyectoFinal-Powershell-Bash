@@ -2,8 +2,8 @@
 
 Este repositorio contiene dos herramientas para facilitar las labores de un administrador de un data center:
 
-- `admin_tool.ps1` : Implementación en PowerShell (ya entregada).
-- `admin_tool.sh`  : Implementación en BASH (esta versión).
+- `admin_tool.ps1` : Implementación en PowerShell.
+- `admin_tool.sh`  : Implementación en BASH.
 
 Requisitos y notas:
 
@@ -38,4 +38,5 @@ Notas de entrega:
 
 - Documentar el equipo y el repositorio en GitHub antes de la fecha de presentación (13-NOV-2025).
 - El profesor actuará como usuario en horas de oficina y podrá solicitar demostraciones.
+
 
